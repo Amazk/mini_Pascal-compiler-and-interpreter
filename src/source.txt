@@ -1,6 +1,10 @@
-959541 Language
-dsqf
-qfsd
-d
-d
-Ecrire
+PROGRAMME i;
+CONST a=5,b='b';
+VAR c,d,e;
+DEBUT
+c:=-a*4+3;
+LIRE(e);
+e:=e+5;
+ECRIRE(c,e);
+ECRIRE(a,4,'yo');
+FIN

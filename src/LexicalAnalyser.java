@@ -1,9 +1,10 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class LexicalAnalyser {
-
     private static final int LongMaxIdent = 20;
     private static final int LongMaxChaine = 50;
     private static final int NbMotsReserves = 7;
@@ -27,29 +28,28 @@ public class LexicalAnalyser {
     public int getNumber() {
         return number;
     }
-
+    public int getNumLine() {
+        return numLine;
+    }
+    public String getChaine() {
+        return chaine;
+    }
     public String getCarlu() {
         return carlu;
     }
-
     public void run() {
         init();
-        while (!carlu.equals("$")) {
-            analex();
-        }
+        while (!carlu.equals("$")) analex();
         end();
     }
-
     public void init() {
         numLine = 0;
         lireCar();
     }
-
     public void end() {
         source.close();
-        error(1);
+        //error(1);
     }
-
     public String analex() {
         String uniLex;
         sauterSeparateur();
@@ -58,13 +58,14 @@ public class LexicalAnalyser {
         else if(carlu.matches("[a-zA-Z]")) uniLex = reco_Ident_Motreserve();
         else if(isSymb()) uniLex = recoSymb();
         else {
-            source.nextLine();
             numLine++;
-            uniLex = analex();
+            lireCar();        // Windows : \r\n donc 2 fois lireCar()
+            lireCar();        // Linux : \n donc 1 fois lireCar()
+            if(!carlu.equals("$")) uniLex = analex();
+            else uniLex = "$";
         }
         return uniLex;
     }
-
     private void error(int numError) {
         String mesError="";
         switch (numError) {
@@ -74,10 +75,9 @@ public class LexicalAnalyser {
             default -> {
             }
         }
-        System.out.println(mesError+" at line "+numLine);
+        System.out.print(mesError+" at line "+numLine);
         System.exit(1);
     }
-
     private void lireCar() {
         if(!source.hasNext()) {           // End of file
             carlu = "$";
@@ -85,7 +85,6 @@ public class LexicalAnalyser {
         }
         carlu = source.next();
     }
-
     private void sauterSeparateur() {
         while (carlu.equals(" ")) lireCar();
         if (carlu.equals("{")) {
@@ -97,7 +96,6 @@ public class LexicalAnalyser {
             }
         }
     }
-
     private String recoEntier() {
         StringBuilder temp = new StringBuilder(carlu);
         lireCar();
@@ -109,7 +107,6 @@ public class LexicalAnalyser {
         if(number>10e+8) error(2);             // number > MaxInt
         return "ent";
     }
-
     private String recoChaine() {
         StringBuilder temp = new StringBuilder();
         lireCar();
@@ -129,7 +126,6 @@ public class LexicalAnalyser {
         if(chaine.length()>LongMaxChaine) error(3);
         return "ch";
     }
-
     private String reco_Ident_Motreserve() {
         StringBuilder temp = new StringBuilder(carlu);
         lireCar();
@@ -141,14 +137,12 @@ public class LexicalAnalyser {
         if(chaine.length() > LongMaxIdent) chaine = chaine.substring(0,LongMaxIdent);
         return isReservedWord() ? "motcle" : "ident";
     }
-
     private boolean isReservedWord() {
         for(String mot : motsReserves)
             if(chaine.equals(mot))
                 return true;
         return false;
     }
-
     private String recoSymb() {
         String unilex="";
         switch (carlu) {
@@ -157,21 +151,23 @@ public class LexicalAnalyser {
             case "." -> unilex = "point";
             case ":" -> {
                 lireCar();
-                return carlu.equals("=") ? "aff" : "deuxpts";
+                if(carlu.equals("=")) unilex = "aff";
+                else return "deuxpts";
             }
             case "(" -> unilex = "parouv";
             case ")" -> unilex = "parfer";
             case "<" -> {
                 lireCar();
-                return switch (carlu) {
-                    case "=" -> "infe";
-                    case ">" -> "diff";
-                    default -> "inf";
-                };
+                switch (carlu) {
+                    case "=" -> unilex = "infe";
+                    case ">" -> unilex = "diff";
+                    default -> {return "inf";}
+                }
             }
             case ">" -> {
                 lireCar();
-                return carlu.equals("=") ? "supe" : "sup";
+                if(carlu.equals("=")) unilex = "supe";
+                else return "sup";
             }
             case "=" -> unilex = "eg";
             case "+" -> unilex = "plus";
@@ -182,7 +178,6 @@ public class LexicalAnalyser {
         lireCar();
         return unilex;
     }
-
     private boolean isSymb() {
         for(String symb : symbs)
             if(carlu.equals(symb))

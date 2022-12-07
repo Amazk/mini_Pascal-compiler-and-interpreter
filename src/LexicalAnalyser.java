@@ -1,13 +1,10 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class LexicalAnalyser {
     private static final int LongMaxIdent = 20;
     private static final int LongMaxChaine = 50;
-    private static final int NbMotsReserves = 7;
     private final Scanner source;
     private String carlu;
     private int number;
@@ -36,11 +33,6 @@ public class LexicalAnalyser {
     }
     public String getCarlu() {
         return carlu;
-    }
-    public void run() {
-        init();
-        while (!carlu.equals("$")) analex();
-        end();
     }
     public void init() {
         numLine = 0;

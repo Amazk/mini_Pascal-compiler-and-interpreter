@@ -4,33 +4,46 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.Stack;
 
-public class Main {
+public class Main {         // Sous linux modifie analex \n
     public static void main(String[] args) throws IOException {
-        SyntaxAnalyzer analyzer = new SyntaxAnalyzer(new LexicalAnalyser(new File("D:\\bureau\\Coding\\Java\\Compilator\\src\\source.txt")));
+        SyntaxAnalyzer analyzer = new SyntaxAnalyzer(new LexicalAnalyser(new File("Gen/source.txt")));
         interpreter(analyzer);
         System.out.println("Ident Table : "+analyzer.idents);
     }
     private static void interpreter(SyntaxAnalyzer analyzer) throws FileNotFoundException {
-        Scanner scanner = new Scanner(new File("D:\\bureau\\Coding\\Java\\Compilator\\source.cod"));
+        Scanner scanner = new Scanner(new File("Gen/source.cod"));
         Stack<Integer> pilex = new Stack<>();
         scanner.nextLine();
+        int op1,op2;
         String pCode = scanner.nextLine();
         while (!pCode.equals("STOP")) {
             switch (pCode.substring(0, 4)) {
                 case "ADDI" -> {
-                    pilex.add(pilex.pop() + pilex.pop());
+                    op1=pilex.pop();
+                    op2=pilex.pop();
+                    pilex.add(op2+op1);
                     pCode = scanner.nextLine();
                 }
                 case "SOUS" -> {
-                    pilex.add(pilex.pop() - pilex.pop());
+                    op1=pilex.pop();
+                    op2=pilex.pop();
+                    pilex.add(op2-op1);
                     pCode = scanner.nextLine();
                 }
                 case "MULT" -> {
-                    pilex.add(pilex.pop() * pilex.pop());
+                    op1=pilex.pop();
+                    op2=pilex.pop();
+                    pilex.add(op2*op1);
                     pCode = scanner.nextLine();
                 }
                 case "DIVI" -> {
-                    pilex.add(pilex.pop() / pilex.pop());
+                    op1=pilex.pop();
+                    op2=pilex.pop();
+                    if(op1==0) {
+                        System.out.println("Erreur Division par 0");
+                        System.exit(1);
+                    }
+                    pilex.add(op2/op1);
                     pCode = scanner.nextLine();
                 }
                 case "MOIN" -> {

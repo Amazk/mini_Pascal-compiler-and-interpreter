@@ -12,11 +12,11 @@ public class SyntaxAnalyzer {
     private final PrintWriter writer;
     private final Stack<String> pilOp;
     private final LexicalAnalyser lexicalAnalyser;
-    public final Map<String, String[]> idents = new MyMap(); //String[]  -> [type ident, type var, valeur, adresse]      type var = 0/1 <> ent/ch
+    public final Map<String, String[]> idents = new MyMap();    //String[]  -> [type ident, type var, valeur, adresse]      type var = 0/1 <> ent/ch
 
     public SyntaxAnalyzer(LexicalAnalyser lexicalAnalyser) throws IOException {
         this.lexicalAnalyser = lexicalAnalyser;
-        writer = new PrintWriter("source.cod", StandardCharsets.UTF_8);
+        writer = new PrintWriter("Gen/source.cod", StandardCharsets.UTF_8);
         pilOp = new Stack<>();
         run();
     }
@@ -102,6 +102,8 @@ public class SyntaxAnalyzer {
         analex();
         if(is("ident")) {
             semanticVar();
+            if(!lexicalAnalyser.getCarlu().equals(";") && !lexicalAnalyser.getCarlu().equals(","))
+                error("Syntax error : missing ';' in declVar()");
             analex();
             while (is("virg")) {
                 analex();
@@ -139,8 +141,10 @@ public class SyntaxAnalyzer {
                     default -> error("Syntax error : missing ECRIRE/LIRE/DEBUT or ident in bloc()");
                 }
             }
-            if(!isEnd()) analex();
-        } else if(!isEnd()) error("Syntax error : missing DEBUT in bloc()");
+            analex();
+            if(!isEnd()) error("Syntax error : word after 'FIN'");
+        }
+        else if(!isEnd()) error("Syntax error : missing DEBUT in bloc()");
     }
     private void ecriture() {
         analex();
@@ -203,6 +207,7 @@ public class SyntaxAnalyzer {
         if(is("aff")) {
             analex();
             if(exp()) {
+                while (!pilOp.isEmpty()) writer.println(pilOp.pop());
                 writer.println("AFFE");
                 if(is("ptvirg")) analex();
                 else error("Syntax error : missing ';' in affectation()");
@@ -221,6 +226,7 @@ public class SyntaxAnalyzer {
     private boolean ecr_Exp() {
         if(!is("ch")) {
             boolean b = exp();
+            while (!pilOp.isEmpty()) writer.println(pilOp.pop());
             writer.println("ECRE");
             return b;
         }
@@ -236,7 +242,6 @@ public class SyntaxAnalyzer {
     private boolean terme() {
         if(is("ent")) {
             writer.println("EMPI "+lexicalAnalyser.getNumber());
-            if(!pilOp.isEmpty()) writer.println(pilOp.pop());
             return true;
         }
         if(is("ident")) {
@@ -245,7 +250,6 @@ public class SyntaxAnalyzer {
                     writer.println("EMPI "+(idents.get(lexicalAnalyser.getChaine())[0].equals("var") ?
                             idents.get(lexicalAnalyser.getChaine())[3] :  idents.get(lexicalAnalyser.getChaine())[2]));
                     if(idents.get(lexicalAnalyser.getChaine())[0].equals("var")) writer.println("CONT");
-                    if(!pilOp.isEmpty()) writer.println(pilOp.pop());
                     return true;
                 }
                 else error("Semantic error : integer ident required in terme()");
@@ -277,7 +281,7 @@ public class SyntaxAnalyzer {
     private void addPilOp() {
         switch (unilex) {
             case "plus" -> pilOp.add("ADDI");
-            case "moins" -> pilOp.add("MOIN");
+            case "moins" -> pilOp.add("SOUS");
             case "divi" -> pilOp.add("DIVI");
             case "mult" -> pilOp.add("MULT");
         }
